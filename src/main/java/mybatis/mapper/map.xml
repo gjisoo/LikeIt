@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="map">
+
+	<select id="check_pw" parameterType="Map" resultType="vo.MemVO">
+		SELECT *
+		FROM 0508_member
+		WHERE m_idx = #{m_idx}
+		AND m_pw =
+		#{m_pw}
+	</select>
+
+	<select id="modifylist" parameterType="String"
+		resultType="vo.MemVO">
+		SELECT * FROM 0508_member
+		WHERE m_idx = #{m_idx}
+	</select>
+
+	<update id="modifyinfo" parameterType="Map">
+		UPDATE 0508_member
+		SET
+		m_pw = #{m_pw}, m_phone = #{m_phone}, m_email = #{m_email}
+		WHERE m_idx = #{m_idx}
+	</update>
+
+	<update id="delmem" parameterType="String">
+		UPDATE 0508_member
+		SET m_status
+		= 2
+		WHERE m_idx = #{m_idx}
+	</update>
+
+	<resultMap id="qnaWithCountMap" type="vo.QnaVO">
+		<id property="q_idx" column="q_idx" />
+		<!-- 다른 필드 매핑 정의 -->
+		<result property="comm_count" column="comm_count"
+			jdbcType="INTEGER" />
+	</resultMap>
+
+	<select id="qnalistWithCountComm" resultMap="qnaWithCountMap"
+		parameterType="String">
+
+		SELECT *
+		FROM (
+		SELECT @RN:=@RN+1 as s_num, c.* FROM (
+		SELECT q.*, COUNT(c.c_idx) AS comm_count
+		FROM 0508_qna q
+		LEFT JOIN
+		0508_comm c
+		ON q.q_idx = c.q_idx AND c_status = 0
+		WHERE q.m_idx = #{m_idx} AND q_status = 0 
+		GROUP BY q.q_idx
+		ORDER
+		BY q.q_idx
+		DESC
+		) c, (SELECT @RN:=0) as s
+		) c WHERE c.s_num BETWEEN
+		#{begin} AND #{end}
+	</select>
+
+	<resultMap type="vo.AuctionVO" id="map1">
+		<id property="a_idx" column="a_idx" />
+		<result property="a_price" column="a_price" />
+		<result property="a_status" column="a_status" />
+		<association property="pvo" resultMap="map2" />
+	</resultMap>
+
+	<resultMap type="vo.ProductVO" id="map2">
+		<id property="p_idx" column="p_idx" />
+		<result property="p_f_date" column="p_f_date" />
+		<result property="file_name" column="file_name" />
+		<result property="p_name" column="p_name" />
+		<result property="p_status" column="p_status" />
+	</resultMap>
+
+	<select id="buylist" resultMap="map1" parameterType="Map">
+		SELECT *
+		FROM (
+		SELECT @RN:=@RN+1 as s_num, c.* FROM (
+		SELECT a_idx, a_price,
+		a_status,
+		b.p_name, b.p_status, b.file_name, b.p_f_date, b.p_idx FROM
+		0508_auction
+		a
+		INNER JOIN 0508_product b
+		ON a.p_idx = b.p_idx
+		WHERE
+		a.m_idx = #{m_idx}
+		ORDER BY a_idx DESC
+		) c, (SELECT @RN:=0) as s
+		) c
+		WHERE c.s_num BETWEEN
+		#{begin} AND #{end}
+	</select>
+
+	<select id="salelist" resultMap="map1" parameterType="Map">
+		SELECT *
+		FROM (
+		SELECT @RN:=@RN+1 as s_num, c.* FROM (
+		SELECT a_idx, a_price,
+		a_status,
+		b.p_name, b.p_status, b.file_name, b.p_f_date, b.p_idx FROM
+		0508_auction
+		a
+		INNER JOIN 0508_product b
+		ON a.p_idx = b.p_idx
+		WHERE
+		b.m_idx = #{m_idx} and a.a_status = 2
+		ORDER BY a_idx DESC
+		
+		) c, (SELECT @RN:=0) as s
+		) c
+		WHERE c.s_num BETWEEN
+		#{begin} AND #{end}
+	</select>
+
+
+	<select id="qnaTotalCount" resultType="int"
+		parameterType="String">
+		SELECT COUNT(*) FROM 0508_qna
+		WHERE m_idx = #{m_idx}
+	</select>
+
+	<select id="buyTotalCount" resultType="int"
+		parameterType="String">
+		SELECT COUNT(*) FROM 0508_auction
+		WHERE m_idx = #{m_idx}
+	</select>
+
+	<select id="saleTotalCount" resultType="int"
+		parameterType="String">
+		SELECT COUNT(*) FROM 0508_auction
+		WHERE m_idx = #{m_idx} AND a_status = 2
+	</select>
+
+	<select id="countComm" resultType="int" parameterType="String">
+		SELECT
+		COUNT(*) FROM 0508_comm
+		WHERE q_idx = #{q_idx} AND c_status = 0
+	</select>
+
+
+</mapper>

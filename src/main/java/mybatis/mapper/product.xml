@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="product">
+ 
+ <update id="delProduct">
+ 	update 0508_product
+ 	SET p_status = 3
+  	WHERE p_f_date = CURDATE()
+ </update>
+ 
+ <update id="delAuction">
+ 	update 0508_auction
+	set a_status = 2
+	where a_idx IN (SELECT au.a_idx FROM (
+			select max(a.a_idx) a_idx from 0508_auction a
+			WHERE a.p_idx in (select
+						p_idx from 0508_product 
+						where p_status = 3)
+			group by a.p_idx
+	    ) au
+	)
+ </update>
+ 
+<insert id="add" parameterType="vo.ProductVO" useGeneratedKeys="true" keyProperty="p_idx">
+	INSERT INTO 0508_product(p_name, p_s_price, m_idx, p_info, p_r_date, p_goal_like, p_status, like_count, hit_count, ori_name, file_name, file_size, img_date, m_id)
+	VALUES(#{p_name}, #{p_s_price}, #{m_idx}, #{p_info}, CURDATE(), #{p_goal_like}, 0, 0, 0, #{ori_name}, #{file_name}, #{file_size}, CURDATE(), #{m_id})
+</insert>
+
+<insert id="addAuc" parameterType="map">
+	insert into 0508_auction(p_idx, a_price, a_date, a_status, a_file_name)
+	values(#{p_idx}, #{a_price}, CURDATE(), 0, #{file_name})
+</insert>
+
+<!-- 판매중 상품(status값이 2인)의 총 개수를 반환하는 SELECT -->
+ <select id="saleCount" resultType="int" parameterType="String">
+   SELECT COUNT(*) FROM 0508_product
+   WHERE p_status = 2
+ </select>
+ 
+ <!-- 판매대기 검색 상품(status값이 1인)의 검색 총 개수를 반환하는 SELECT -->
+  <select id="searchHoldCount" resultType="int" parameterType="String">
+   SELECT COUNT(*) FROM 0508_product
+  	<if test="searchValue == null">
+  		where p_status = 1
+  	</if>
+  	
+  	<if test="searchValue != null">
+ 	  	<where>
+	 	 	(p_name LIKE CONCAT('%',#{searchValue},'%')  and p_status = 1) or (m_id LIKE CONCAT('%',#{searchValue},'%')  and p_status = 1)
+	  	</where>
+  	</if>
+ </select>
+ 
+ <!-- 판매대기 검색 상품(status값이 2인)의 검색 상품 총개수 반환 -->
+ <select id="searchSaleCount" resultType="int" parameterType="String">
+   SELECT COUNT(*) FROM 0508_product
+  	<if test="searchValue == null">
+  		where p_status = 2
+  	</if>
+  	
+  	<if test="searchValue != null">
+ 	  	<where>
+	 	 	(p_name LIKE CONCAT('%',#{searchValue},'%')  and p_status = 1) or (m_id LIKE CONCAT('%',#{searchValue},'%')  and p_status = 1)
+	  	</where>
+  	</if>
+ </select>
+ 
+ <!-- 판매대기 상품(status값이 1인)의 총 개수를 반환하는 SELECT -->
+ <select id="holdCount" resultType="int" parameterType="String">
+   SELECT COUNT(*) FROM 0508_product
+   WHERE p_status = 1
+ </select>
+ 
+ <!-- 판매중 상품이 오늘날짜와 경매시작일이 동일한지 확인 -->
+ <select id="isCompareTo" parameterType="String" resultType="Integer">
+ 	select count(*) from 0508_product
+ 	where p_idx = #{p_idx} and p_s_date = CURDATE()
+ </select>
+ 
+ <!-- 판매중 상품(status값이 2인)List반환 SELECT -->
+ <select id="saleList" resultType="vo.ProductVO">
+ 	SELECT * FROM(
+	SELECT @RN:=@RN+1 as r_num,a.* FROM( 
+		SELECT *FROM 0508_product where p_status = 2 order by p_idx desc) a, (select @RN:=0) b 
+) a where a.r_num between #{begin} and #{end};
+ </select>
+ 
+ <!-- 대기중 상품(status값이 1인) List 검색 -->
+ <select id="searchHoldList" resultType="vo.ProductVO" parameterType="map">
+ 	SELECT * FROM (
+        SELECT @RN:=@RN+1 AS rnum, a.* FROM (
+            SELECT * FROM `0508_product` WHERE p_status = 1
+            <if test="searchValue != null">
+                and (m_id LIKE CONCAT('%', #{searchValue}, '%'))or
+                (p_name LIKE CONCAT('%', #{searchValue}, '%'))
+                    
+            </if>
+        ) a, (SELECT @RN:=0) r
+    ) a WHERE a.rnum BETWEEN #{begin} AND #{end}
+ </select>
+ 
+  <!-- 판매중 상품(status값이 2인) List 검색 -->
+ <select id="searchSaleList" resultType="vo.ProductVO" parameterType="map">
+ 	SELECT * FROM (
+        SELECT @RN:=@RN+1 AS rnum, a.* FROM (
+            SELECT * FROM `0508_product` WHERE p_status = 2
+            <if test="searchValue != null">
+                and (m_id LIKE CONCAT('%', #{searchValue}, '%'))or
+                (p_name LIKE CONCAT('%', #{searchValue}, '%'))
+                    
+            </if>
+        ) a, (SELECT @RN:=0) r
+    ) a WHERE a.rnum BETWEEN #{begin} AND #{end}
+ </select>
+ 
+ 
+  <!-- 판매대기 상품(status값이 1인)List반환 SELECT -->
+  <select id="holdList" resultType="vo.ProductVO" parameterType="map">
+ 	SELECT * FROM(
+	SELECT @RN:=@RN+1 as r_num,a.* FROM( 
+		SELECT *FROM 0508_product where p_status = 1 order by p_idx desc) a, (select @RN:=0) b 
+) a where a.r_num between #{begin} and #{end};
+ </select>
+ 
+ <select id="getProductInfo" resultType="vo.ProductVO" parameterType="String">
+ 	SELECT * FROM 0508_product
+ 	WHERE p_idx = #{p_idx}
+ </select>
+ 
+ <!-- 작품의 기본키를 인자로 받아서 입찰정보를 모두 반환한다. -->
+ <select id="auc_list" resultType="vo.AuctionVO" parameterType="String">
+ 	SELECT * FROM 0508_auction
+ 	WHERE p_idx = #{p_idx} 
+ 	ORDER BY a_idx DESC
+ </select>
+ 
+ <!-- 조회수 증가 -->
+  <update id="hit" parameterType="String">
+  	UPDATE 0508_product
+  	SET hit_count = hit_count+1
+  	WHERE p_idx = #{p_idx}
+  </update>
+  
+  <!-- 좋아요수 증가 -->
+  <update id="like" parameterType="String">
+  	UPDATE 0508_product
+  	SET like_count = like_count+1
+  	WHERE p_idx = #{p_idx}
+  </update>
+  
+  <!-- 좋아요수 감소 -->
+  <update id="like_down" parameterType="String">
+  	UPDATE 0508_product
+  	SET like_count = like_count-1
+  	WHERE p_idx = #{p_idx}
+  </update>
+  
+  <!-- 좋아요 클릭 시 -->
+  <insert id="addLike" parameterType="map">
+  	insert into 0508_m_like(p_idx, m_idx, l_date, l_status)
+  	values(#{p_idx}, #{m_idx}, CURDATE(), 1)
+  </insert>
+  
+  <!-- 좋아요 상태값이 있는지 확인 -->
+  <select id="checkLikeCount" parameterType="map" resultType="integer">
+  	select count(*) from 0508_m_like
+	where p_idx = #{p_idx} AND m_idx = #{m_idx}
+  </select>
+  
+  
+  <!-- 좋아요 상태값 확인 -->
+  <select id="getLikeStatus" parameterType="map" resultType="integer">
+  	select l_status from 0508_m_like
+  	where p_idx = #{p_idx} AND m_idx = #{m_idx}
+  	ORDER BY like_idx DESC
+	LIMIT 1
+  </select>
+  
+  <!-- 좋아요 취소 -->
+  <insert id="downLike" parameterType="map">
+  	insert into 0508_m_like(p_idx, m_idx, l_date, l_status)
+  	values(#{p_idx}, #{m_idx}, CURDATE(), 0)
+  </insert>
+  
+  <!-- 목표 좋아요 달성 -->
+  <update id="changeLikeStatus" parameterType="String">
+  	update 0508_product
+  	SET p_status = 2, 
+  		p_s_date = DATE_ADD(CURDATE(), INTERVAL 1 DAY), 
+  		p_f_date = DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+  	WHERE p_idx = #{p_idx}
+  </update>
+  
+  <!-- 옥션 리스트 저장 -->
+  <insert id="addAuction" parameterType="map">
+  	insert into 0508_auction (p_idx, a_price, a_date, m_idx, m_id, a_status, a_file_name)
+  	values(#{p_idx}, #{a_price}, CURDATE(), #{m_idx}, #{m_id}, 1, #{a_file_name})
+  </insert>
+  
+  
+  <!-- 형욱 -->
+  <select id="all" resultType="vo.MemVO">
+		SELECT * FROM 0508_member
+
+	</select>
+	
+	<insert id="add_mem" parameterType="Map">
+		INSERT INTO 0508_member(m_id, m_pw, m_name, m_phone, m_email, m_joindate, m_status)
+		VALUES(#{m_id}, #{m_pw}, #{m_name}, #{m_phone}, #{m_email}, CURDATE(), 0)
+	</insert>
+
+	<select id="check_id" parameterType="String" resultType="vo.MemVO">
+  	SELECT * FROM 0508_member
+  	WHERE m_id = #{id}
+  </select>
+  
+  	<select id="login" parameterType="Map" resultType="vo.MemVO">
+		select * from 0508_member
+		where m_id = #{m_id} and m_pw = #{m_pw} and m_status = 0
+	</select>
+  
+	
+	<!-- 홍범 -->
+	<!-- 홈화면 판매대기 상품 -->
+   <select id="home_waitProduct" resultType="vo.ProductVO">
+      select * from 0508_product
+      where p_status = 1
+      ORDER BY p_idx DESC
+      LIMIT 4
+   </select>
+   
+   <!-- 홈화면 판매중 상품 -->
+   <select id="home_saleProduct" resultType="vo.ProductVO">
+      select * from 0508_product
+      where p_status = 2
+      ORDER BY p_idx DESC
+      LIMIT 4
+   </select>
+	
+</mapper>
+
+
+
+
+
+
+
+

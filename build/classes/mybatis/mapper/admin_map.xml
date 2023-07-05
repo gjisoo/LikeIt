@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin_map">
+	<select id="login" parameterType="Map"
+		resultType="vo.MemVO">
+		SELECT * FROM 0508_member
+		WHERE m_id = #{m_id} AND m_pw =
+		#{m_pw} AND m_status = 1
+	</select>
+
+	<select id="saling" parameterType="Map"
+		resultType="vo.ProductVO">
+		SELECT a.*, b.* FROM my_db.0508_product a INNER JOIN
+		0508_status b ON a.p_idx = b.p_idx WHERE s_status = 1;
+	</select>
+
+	<select id="product_list" resultType="vo.ProductVO">
+		SELECT * FROM 0508_product
+		ORDER BY p_idx DESC
+	</select>
+
+	<select id="select" parameterType="String"
+		resultType="vo.ProductVO">
+		SELECT * FROM 0508_product
+		<where>
+			<choose>
+				<when test="select == 0">
+					p_status = 0
+				</when>
+				<when test="select == 1">
+					p_status = 1
+				</when>
+				<when test="select == 2">
+					p_status = 2
+				</when>
+				<when test="select == 3">
+					p_status = 3
+				</when>
+				<when test="select == 4">
+					p_status = 4
+				</when>
+				<when test="select == 5">
+					p_status = 5
+				</when>
+			</choose>
+		</where>
+		ORDER BY p_idx DESC
+	</select>
+
+	<select id="search" parameterType="Map"
+		resultType="vo.ProductVO">
+		SELECT * FROM 0508_product
+		<where>
+			<choose>
+				<when test="searchType == 0">
+					p_idx = #{searchValue}
+				</when>
+				<when test="searchType == 1">
+					p_name LIKE CONCAT('%', #{searchValue}, '%')
+				</when>
+				<when test="searchType == 2">
+					m_id LIKE CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		</where>
+		ORDER BY m_idx DESC
+	</select>
+
+	<select id="m_search" parameterType="Map" resultType="vo.MemVO">
+    SELECT * FROM (
+        SELECT @RN:=@RN+1 AS rnum, a.* FROM (
+            SELECT * FROM `0508_member` WHERE m_status = 0
+            <if test="searchType != null and searchValue != null">
+                <choose>
+                    <when test="searchType == 0">
+                        AND m_idx = #{searchValue}
+                    </when>
+                    <when test="searchType == 1">
+                        AND m_id LIKE CONCAT('%', #{searchValue}, '%')
+                    </when>
+                    <when test="searchType == 2">
+                        AND m_name LIKE CONCAT('%', #{searchValue}, '%')
+                    </when>
+                    <when test="searchType == 3">
+                        AND m_email LIKE CONCAT('%', #{searchValue}, '%')
+                    </when>
+                    <when test="searchType == 4">
+                        AND m_phone LIKE CONCAT('%', #{searchValue}, '%')
+                    </when>
+                </choose>
+            </if>
+        ) a, (SELECT @RN:=0) r
+    ) a WHERE a.rnum BETWEEN #{begin} AND #{end}
+</select>
+
+
+	
+	<select id="m_list" resultType="vo.MemVO" parameterType="Map">
+		SELECT * FROM(
+	SELECT @RN:=@RN+1 as r_num,a.* FROM( 
+		SELECT *FROM 0508_member where m_status = 0 order by m_idx desc) a, (select @RN:=0) b 
+) a where a.r_num between #{begin} and #{end};
+	</select>
+
+	<select id="reg_count" resultType="int">
+
+		SELECT COUNT(*) FROM
+		0508_product
+		WHERE p_status = 0;
+
+	</select>
+
+	<select id="hold_count" resultType="int">
+
+		SELECT COUNT(*) FROM
+		0508_product
+		WHERE p_status = 1
+
+	</select>
+
+	<select id="sale_count" resultType="int">
+
+		SELECT COUNT(*) FROM
+		0508_product
+		WHERE p_status = 2
+
+	</select>
+
+
+
+	<select id="q_list" parameterType="Map" resultType="vo.QnaVO">
+		SELECT * FROM(
+	SELECT @RN:=@RN+1 as r_num,a.* FROM( 
+		SELECT *FROM 0508_qna where q_status = 0 order by q_idx desc) a, (select @RN:=0) b 
+) a where a.r_num between #{begin} and #{end};
+	</select>
+	
+	
+	<select id="q_Mainlist" resultType="vo.QnaVO">
+		SELECT * FROM 0508_qna
+		WHERE q_status = 0
+		ORDER BY q_idx DESC
+	</select>
+
+<select id="q_getCount" resultType="int" parameterType="Map">
+  	SELECT COUNT(*) FROM 0508_qna
+  	<if test="searchType == null and searchValue == null">
+  		where q_status = 0
+  	</if>
+  	
+  	<if test="searchType != null and searchValue != null">
+ 	  	<where>
+	  		<choose>
+	  			<when test="searchType == 0">
+	  				q_idx = #{searchValue} and q_status = 0
+	  			</when>
+	  			<when test="searchType == 1">
+	  				q_title LIKE CONCAT('%',#{searchValue},'%')  and q_status = 0
+	  			</when>
+	  			<when test="searchType == 2">
+                   AND q_writer LIKE CONCAT('%', #{searchValue}, '%')  and q_status = 0
+                    </when>
+	  		
+	  		</choose>
+	  		
+	  	</where>
+  	</if>
+  </select>
+
+
+
+	<select id="q_search" parameterType="Map"
+		resultType="vo.QnaVO">
+		SELECT * FROM (
+        SELECT @RN:=@RN+1 AS rnum, a.* FROM (
+            SELECT * FROM `0508_qna` WHERE q_status = 0
+            <if test="searchType != null and searchValue != null">
+                <choose>
+                    <when test="searchType == 0">
+                        AND q_idx = #{searchValue}
+                    </when>
+                    <when test="searchType == 1">
+                        AND q_title LIKE CONCAT('%', #{searchValue}, '%')
+                    </when>
+                    <when test="searchType == 2">
+                        AND q_writer LIKE CONCAT('%', #{searchValue}, '%')
+                    </when>
+                    
+                    
+                </choose>
+            </if>
+        ) a, (SELECT @RN:=0) r
+    ) a WHERE a.rnum BETWEEN #{begin} AND #{end}
+	</select>
+
+	<select id="mem_info" parameterType="String"
+		resultType="vo.MemVO">
+		SELECT * FROM 0508_member
+		WHERE m_idx = #{m_idx}
+	</select>
+	
+	
+
+	<select id="product_info" parameterType="String"
+		resultMap="map1">
+		SELECT * FROM 0508_product
+		WHERE p_idx = #{p_idx}
+	</select>
+	
+	<select id="qna_info" parameterType="String"
+		resultType="vo.QnaVO">
+		SELECT * FROM 0508_qna
+		WHERE q_idx = #{q_idx} and q_status = 0
+	</select>
+
+	<update id="product_approve" parameterType="String">
+		UPDATE 0508_product
+		SET p_status = 1
+		WHERE p_idx = #{p_idx}
+	</update>
+
+	<update id="product_refuse" parameterType="String">
+		UPDATE 0508_product
+		SET p_status = 4
+		WHERE p_idx = #{p_idx}
+	</update>
+	
+	<update id="product_cancel" parameterType="String">
+		UPDATE 0508_product
+		SET p_status = 5
+		WHERE p_idx = #{p_idx}
+	</update>
+
+	<update id="product_modify" parameterType="Map">
+		UPDATE 0508_product
+		<trim prefix="SET" suffixOverrides=",">
+		 p_name = #{p_name},
+		 p_s_price = IFNULL(#{p_s_price},0),
+		 p_info = #{p_info}
+		</trim>
+		WHERE p_idx = #{p_idx}
+	</update>
+
+	<select id="getBbs" parameterType="String" resultType="vo.ProductVO">
+	SELECT * from 0508_product
+	Where p_idx = #{p_idx}
+  </select>
+
+	<select id="getCount" resultType="int" parameterType="Map">
+  	SELECT COUNT(*) FROM 0508_member
+  	<if test="searchType == null and searchValue == null">
+  		where m_status = 0
+  	</if>
+  	
+  	<if test="searchType != null and searchValue != null">
+  	
+	  	<where>
+	  	
+	  		<choose>
+	  			<when test="searchType == 0">
+	  				m_idx = #{searchValue} and m_status = 0
+	  				
+	  			</when>
+	  			<when test="searchType == 1">
+	  				m_id LIKE CONCAT('%',#{searchValue},'%') and m_status = 0
+	  			</when>
+	  			<when test="searchType == 2">
+                        AND m_name LIKE CONCAT('%', #{searchValue}, '%') and m_status = 0
+                    </when>
+	  			<when test="searchType == 3">
+                        AND m_email LIKE CONCAT('%', #{searchValue}, '%') and m_status = 0
+                    </when>
+                    <when test="searchType == 4">
+                        AND m_phone LIKE CONCAT('%', #{searchValue}, '%') and m_status = 0
+                    </when>
+	  		</choose>
+	  		
+	  	</where>
+  	</if>
+  </select>
+
+	<select id="sold_count" parameterType="String" resultType="int">
+		SELECT COUNT(*) FROM 0508_product
+		WHERE m_idx = #{m_idx} and p_status = 3
+	</select>
+	
+	<select id="bought_count" parameterType="String" resultType="int">
+		SELECT COUNT(*) FROM 0508_auction
+		WHERE m_idx =#{m_idx} and a_status = 2
+	</select>
+
+	<select id="total_sold" parameterType="String" resultType="int">
+		SELECT IFNULL(SUM(a.a_price),0) FROM 0508_auction a
+		INNER JOIN 0508_product b ON a.p_idx = b.p_idx
+		WHERE b.m_idx = #{m_idx} and p_status = 3 and a_status = 2;
+	</select>
+	
+	<select id="total_bought" parameterType="String" resultType="int">
+		SELECT IFNULL(SUM(a_price),0) FROM 0508_auction
+		WHERE m_idx = #{m_idx} and a_status = 2
+	</select>
+
+	<select id="bought_product" resultType="String" parameterType="String">
+		SELECT a_file_name from 0508_auction
+		WHERE m_idx = #{m_idx} and a_status = 2
+	</select>
+
+	<select id="sold_product" resultType="String" parameterType="String">
+		SELECT file_name FROM 0508_product
+		WHERE m_idx = #{m_idx} and p_status = 3 
+	</select>
+
+		<select id="sold_product_list" resultType="vo.ProductVO" parameterType="String">
+		SELECT * FROM 0508_product
+		WHERE m_idx = #{m_idx} and p_status = 3
+	</select>
+
+	<select id="auction_info" parameterType="String"
+		resultType="vo.AuctionVO">
+		SELECT * FROM 0508_auction
+		WHERE m_idx = #{m_idx} and a_status = 2
+	</select>
+	
+	<select id="total_memberCount" resultType="int">
+
+		SELECT COUNT(*) FROM
+		0508_member
+		WHERE m_status = 0
+
+	</select>
+	
+	<select id="new_memberCount" resultType="int">
+
+		SELECT COUNT(*) FROM
+		0508_member
+		WHERE m_status = 0 and date(m_joindate) = date(now())
+
+	</select>
+	
+	 <select id="getBuyer" parameterType="String" resultType="vo.AuctionVO">
+     select * from 0508_auction
+     where p_idx = #{p_idx} AND a_status = 2
+     ORDER BY a_idx DESC
+   LIMIT 1
+  </select>
+	
+	<!-- 문의 게시판(건영형님) -->
+		<select id="all" resultType="vo.MemVO">
+		SELECT * FROM 0508_member
+
+	</select>
+	
+	<insert id="add_mem" parameterType="Map">
+		INSERT INTO 0508_member(m_id, m_pw, m_name, m_phone, m_email, m_joindate, m_status)
+		VALUES(#{m_id}, #{m_pw}, #{m_name}, #{m_phone}, #{m_email}, NOW(), 0)
+	</insert>
+
+	<select id="check_id" parameterType="String" resultType="vo.MemVO">
+  	SELECT * FROM 0508_mem
+  	WHERE m_id = #{id}
+  </select>
+  
+  
+  <select id="product_count" resultType="int" parameterType="Map">
+
+		SELECT COUNT(*) FROM 0508_product
+		
+			<where>
+				
+				<trim suffixOverrides="AND">
+					<if test="searchType != null and searchValue != null">
+					<choose>
+						<when test="searchType == 0">
+				  				p_idx = #{searchValue} AND
+				  			</when>
+				  			<when test="searchType == 1">
+				  				p_name LIKE CONCAT('%',#{searchValue},'%') AND
+				  			</when>
+				  			<when test="searchType == 2">
+				  				m_id LIKE CONCAT('%',#{searchValue},'%') AND
+				  			</when>
+					</choose>
+					</if>
+					<if test="select != null">
+						<choose>
+							<when test="select == 0">
+								p_status = 0
+							</when>
+							<when test="select == 1">
+								p_status = 1
+							</when>
+							<when test="select == 2">
+								p_status = 2
+							</when>
+							<when test="select == 3">
+								p_status = 3
+							</when>
+							<when test="select == 4">
+								p_status = 4
+							</when>
+							<when test="select == 5">
+								p_status = 5
+							</when>
+						</choose>
+					</if>
+				</trim>
+			</where>
+			ORDER BY p_idx DESC
+	</select>
+	
+	<resultMap id="map1" type="vo.ProductVO">
+	  <id property="p_idx" column="p_idx"/>
+		 
+		  	<association property="avo" javaType="vo.AuctionVO" select="getAprice" column="p_idx"/>
+			   
+		
+	</resultMap>
+	
+	<select id="getAprice" parameterType="String" resultType="vo.AuctionVO">
+		SELECT * FROM 0508_Auction
+		WHERE p_idx = #{p_idx}
+		ORDER BY a_idx DESC
+		LIMIT 1
+	</select>
+	
+	
+	<select id="product_li" parameterType="Map" resultMap="map1">
+		SELECT * FROM(
+			SELECT @RN:=@RN+1 as r_num,a.* FROM(
+				SELECT * FROM 0508_product
+				
+					<where>
+						<trim suffixOverrides="AND">
+							<if test="searchType != null and searchValue != null">
+								<choose>
+									<when test="searchType == 0">
+							  				p_idx = #{searchValue} AND
+							  			</when>
+							  			<when test="searchType == 1">
+							  				p_name LIKE CONCAT('%',#{searchValue},'%') AND
+							  			</when>
+							  			<when test="searchType == 2">
+							  				m_id LIKE CONCAT('%',#{searchValue},'%') AND
+							  			</when>
+								</choose>
+							</if>
+							<if test="select != null">
+								<choose>
+									<when test="select == 0">
+										p_status = 0
+									</when>
+									<when test="select == 1">
+										p_status = 1
+									</when>
+									<when test="select == 2">
+										p_status = 2
+									</when>
+									<when test="select == 3">
+										p_status = 3
+									</when>
+									<when test="select == 4">
+										p_status = 4
+									</when>
+									<when test="select == 5">
+										p_status = 5
+									</when>
+								</choose>
+							</if>
+						</trim>
+					</where>
+				ORDER BY p_idx DESC
+			) a, (SELECT @RN:=0) b
+		) a where a.r_num BETWEEN #{begin} and #{end}
+	</select>
+	
+  
+  
+  
+</mapper>
+
+
+
+
+
+
+
+

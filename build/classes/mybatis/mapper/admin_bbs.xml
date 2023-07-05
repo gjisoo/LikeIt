@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin_bbs">
+
+  <resultMap type="vo.BbsVO" id="map1">
+  	<id column="q_idx" property="q_idx"/>
+  	<!-- 원글 하나에 여러 개의 댓글들이 존재할 수 있으므로
+  		집합구조를 일대 다 관계에 맞는 collection을 선언한다. -->
+  	<collection property="c_list" ofType="vo.CommVO" 
+  		select="commList" column="q_idx"/>
+  </resultMap>
+
+<!-- 전체 수를 반환하는 기능: 검색기능도 있어야 한다. -->
+  <select id="count" resultType="int" parameterType="Map">
+  	SELECT COUNT(*) FROM 0508_qna
+  	<if test="searchType != null and searchValue != null">
+	  	<where>
+	  		<choose>
+	  			<when test="searchType == 0">
+	  				q_title LIKE CONCAT('%',#{searchValue},'%')
+	  			</when>
+	  			<when test="searchType == 1">
+	  				q_content LIKE CONCAT('%',#{searchValue},'%')
+	  			</when>
+	  		</choose>
+	  	</where>
+  	</if>
+  </select>
+
+  <!-- 원글들을 가져오는 SELECT -->
+  <select id="list" resultType="vo.BbsVO" parameterType="Map">
+	  SELECT * FROM(	
+	  	SELECT @RN:=@RN+1 AS rnum, a.* FROM (SELECT * FROM 0508_qna
+	  	<if test="searchType != null and searchValue != null">
+		  	<where>
+		  		<choose>
+		  			<when test="searchType == 0">
+	  					q_title LIKE CONCAT('%',#{searchValue},'%')
+		  			</when>
+		  			<when test="searchType == 1">
+		  				q_content LIKE CONCAT('%',#{searchValue},'%')
+		  			</when>
+		  		</choose>
+		  	</where> 
+		 </if>
+	  	) a , (SELECT @RN:=0) r ORDER BY q_idx DESC 
+	  ) a WHERE a.rnum BETWEEN #{begin} AND #{end} AND q_status = 0
+  </select>
+
+	<resultMap type="vo.CommVO" id="m2">
+  	<result property="m_idx" column="m_idx"/>
+  	<association property="mvo" javaType="vo.MemVO" select="getMem" column="m_idx"/>
+  </resultMap>
+  
+  <select id="getMem" parameterType="String" resultType="vo.MemVO">
+  	SELECT * FROM 0508_member
+  	WHERE m_idx = #{m_idx}
+  </select>
+  
+  
+  <select id="commList" resultMap="m2" parameterType="String">
+    SELECT * FROM 0508_comm
+    WHERE q_idx = #{q_idx} AND c_status = 0
+  </select>
+  
+ <select id="getComm" resultType="vo.CommVO" parameterType="String">
+    SELECT * FROM 0508_comm
+    WHERE c_idx = #{c_idx}
+  </select>
+  
+  <!--  원글 추가 기능 -->
+ 
+  
+  <!-- 사용자가 게시물의 제목을 클릭할 때 기본키인 b_idx를
+  		인자로 전달하여 해당 게시물을 찾아서 반환하는 기능 -->
+ <select id="getBbs" parameterType="String" resultMap="map1">
+  	SELECT * FROM (SELECT a.*, b.m_id FROM 0508_qna a INNER JOIN 0508_member b ON a.m_idx = b.m_idx) d
+  	WHERE q_idx = #{q_idx}
+  </select>
+  
+  
+  <select id="getBbs1" parameterType="string" resultMap="map1">
+  	SELECT * FROM 0508_qna
+  	WHERE q_idx = #{q_idx}
+  </select>
+
+<!-- 댓글 저장 기능 -->
+  <insert id="addComm" parameterType="Map">
+  	INSERT INTO 0508_comm(c_content, c_ip, c_date, q_idx, c_status, m_idx)
+  	VALUES(#{c_content}, #{c_ip}, NOW(), #{q_idx}, 0, #{m_idx})
+  </insert>
+
+<!-- 글 수정 -->
+ <update id="edit" parameterType="Map">
+  	UPDATE 0508_qna
+  	<trim prefix="SET" suffixOverrides=",">
+  		q_title = #{q_title},
+  		q_content = #{q_content},
+  		q_ip = #{q_ip},
+  		q_date = NOW(),
+  	</trim>
+  	WHERE q_idx = #{q_idx}
+  </update>
+
+<!-- 댓글 수정 -->
+ <update id="editcomm" parameterType="Map">
+  	UPDATE 0508_comm
+  	<trim prefix="SET" suffixOverrides=",">
+  		c_content = #{c_content},
+  		c_ip = #{c_ip},
+  		c_date = NOW(),
+  	</trim>
+  	WHERE c_idx = #{c_idx} AND m_idx = #{m_idx}
+  </update>
+
+<!-- 삭제 -->
+<update id="del" parameterType="Map">
+	UPDATE 0508_qna SET q_status=1 WHERE q_idx=#{q_idx}
+</update>
+
+<!-- 댓글 삭제 -->
+<update id="delcomm" parameterType="Map">
+	UPDATE 0508_comm SET c_status=1 WHERE c_idx=#{c_idx}
+</update>
+
+<!-- 원글의 조회수를 증가 -->
+<update id="hit" parameterType="String">
+	UPDATE 0508_qna SET q_hit = q_hit+1 WHERE q_idx = #{q_idx}
+</update>
+
+
+<!-- qna-member inner join --> 
+  <select id="joinQnaMem" parameterType="string" resultMap="map1">
+  	SELECT a.*, b.* FROM 0508_qna a INNER JOIN 0508_member b
+  </select>
+
+
+
+
+
+</mapper>
+
+
+
+
+
+
+
+

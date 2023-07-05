@@ -1,0 +1,122 @@
+.u-section-1 .u-sheet-1 {
+  min-height: 400px;
+}
+
+	
+	#bbs table {
+	    width:1140px;
+	    border:1px solid black;
+	    border-collapse:collapse;
+	    font-size:14px;
+	    margin-bottom: 10px;
+	    border-bottom: 1px solid white;
+	    
+	}
+	
+	
+	#bbs table caption {
+	    text-indent: -9999px;
+	}
+	
+	#bbs table th,#bbs table td {
+	    text-align:center;
+	    border:1px solid black;
+	    padding:4px 10px;
+	}
+	
+	
+	
+	.no {width:7%; color: white;}
+	.subject {width:62%; color: white;}
+	.writer {width:12%; color: white;}
+	.reg {width:7%; color: white;}
+	.hit {width:12%; color: white;}
+	.title{background:#444444}
+	
+	.odd {background:silver}
+	
+	/* paging */
+	
+	#bbs table tfoot tr td{
+	    border-left: 1px solid white;
+	    border-right: 1px solid white;;
+	    border-bottom: 1px solid white;;
+	    
+	}
+	
+	#bbs table #titleclick{
+	padding: 0px;
+	margin: 0px;
+	font-size: 14px;
+	color: #111111;
+	}
+	
+	#bbs table #passblock{
+	text-align: right;
+	border-bottom: 1px solid white;
+	border-left: 1px solid white;
+	border-right: 1px solid white;
+	padding: 0px;
+	padding-top: 7px;
+	
+	}
+	
+	table tfoot ol.paging {
+	    list-style:none;
+	}
+	
+	table tfoot ol.paging li {
+	    display: inline-block;
+	    margin-right:8px;
+	}
+	
+	table tfoot ol.paging li a {
+	    display:block;
+	    padding:0px 7px;
+	    border:1px solid #444444;
+	    color:#2f313e;
+	    font-weight:bold;
+	    text-decoration: none
+	}
+	
+	table tfoot ol.paging li a:hover {
+	    background:#555555;
+	    color:white;
+	    font-weight:bold;
+	    text-decoration: none
+	}
+	
+	.disable {
+	    padding:0px 7px;
+	    border:1px solid silver;
+	    color:silver;
+	}
+	
+	.now {
+	   padding:0px 7px;
+	    border:1px solid #444444;
+	    background:#444444;
+	    color:white;
+	    font-weight:bold;
+	}
+	
+	.empty{
+		height: 50px;
+		color: #ababab;
+	}
+	
+	#write{
+	float: left;
+	}
+	
+	#searchType, #searchValue{
+	display:inline-block;
+	}
+	
+	#search_popup{
+	text-align: center;
+	}
+	
+	#searchButton{
+	display:inline-block;
+	}
