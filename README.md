@@ -1,6 +1,30 @@
-# LikeIt
+<br/>
 
-#실행화면
+# LikeIt❤️ 
+<br/>
+
+### ❓ 프로젝트 개요   
+
+<br/>
+<br/>
+
+### ❗ 프로젝트 목적
+
+
+
+<br/>
+<br/>
+
+### 프로젝트 기간
+
+<br/>
+<br/>
+
+### 📚Tech Stack📚
+
+### 🛠Tools🛠
+
+# 실행화면
 ![판매대기](https://github.com/gjisoo/LikeIt/assets/103836040/387d00b3-38af-481c-9052-25d7571116ab)
 ![상품등록 요청](https://github.com/gjisoo/LikeIt/assets/103836040/d5337a02-9d6f-4bc2-866d-d71bdb70efc7)
 ![상품상세](https://github.com/gjisoo/LikeIt/assets/103836040/ce03fa29-1441-48aa-9d80-67d7f13be40b)
